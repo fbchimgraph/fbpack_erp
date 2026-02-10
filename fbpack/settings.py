@@ -4,7 +4,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-ultimate-erp-secret-key'
 DEBUG = False
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://fbpack-erp-2.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
