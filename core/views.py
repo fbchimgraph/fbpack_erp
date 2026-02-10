@@ -1,4 +1,6 @@
-from django.contrib.auth.decorators import login_required
+# views.py – version test sans login
+
+# from django.contrib.auth.decorators import login_required  # login désactivé pour test
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render
 from django.db.models import Sum, Count, Q
@@ -11,7 +13,7 @@ from .models import *
 
 # --- VUES EXISTANTES (DASHBOARD & REPORTING) ---
 
-@login_required
+# @login_required  # désactivé pour test
 def dashboard(request):
     # KPIs globaux
     context = {
@@ -23,12 +25,12 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-@login_required
+# @login_required  # désactivé pour test
 def production_gantt(request):
     orders = ProductionOrder.objects.exclude(status='DONE').order_by('machine', 'start_time')
     return render(request, 'production/gantt.html', {'orders': orders})
 
-@login_required
+# @login_required  # désactivé pour test
 def reporting(request):
     delayed_ofs = ProductionOrder.objects.filter(status='LATE')
     
@@ -52,11 +54,10 @@ def reporting(request):
 
 # --- NOUVELLE VUE D'IMPORTATION UNIFIÉE ---
 
-@login_required
+# @login_required  # désactivé pour test
 def import_stock_view(request):
     context = {}
     
-    # Début du bloc TRY pour attraper les erreurs
     if request.method == 'POST' and request.FILES.get('excel_file'):
         try:
             import_type = request.POST.get('import_type')
@@ -65,7 +66,6 @@ def import_stock_view(request):
             filename = fs.save(excel_file.name, excel_file)
             file_path = fs.path(filename)
             
-            # Lecture Excel (fillna pour éviter les NaN qui plantent les calculs)
             df = pd.read_excel(file_path).fillna(0)
             count = 0
             
@@ -137,7 +137,6 @@ def import_stock_view(request):
                     final_tool_type = user_default_type
                     if 'FLEXO' in designation: final_tool_type = 'CLICHE'
 
-                    # Couleurs
                     clr_col = next((c for c in df.columns if 'CLR' in c or 'COUL' in c), None)
                     raw_clr = str(row.get(clr_col, '0')) if clr_col else '0'
                     try:
@@ -209,38 +208,28 @@ def import_stock_view(request):
                         )
                         count += 1
 
-            # --- 5. IMPORT CONSOMMATION (AVEC JOB & GRAMMAGE) ---
+            # --- 5. IMPORT CONSOMMATION ---
             elif import_type == 'CONSO':
                 for _, row in df.iterrows():
-                    # 1. Date
                     try:
                         d_prod = pd.to_datetime(row.get('Date')).date()
                     except:
                         d_prod = datetime.date.today()
 
-                    # 2. Type
                     raw_type = str(row.get('Type', 'FLEXO')).upper()
                     final_type = 'HELIO' if 'HELIO' in raw_type else 'FLEXO'
 
-                    # 3. Nom du Job (Essaye plusieurs colonnes)
-                    job_val = row.get('Job')
-                    if not job_val: job_val = row.get('Nom')
-                    if not job_val: job_val = row.get('Designation')
-                    if not job_val: job_val = "Inconnu"
+                    job_val = row.get('Job') or row.get('Nom') or row.get('Designation') or "Inconnu"
 
-                    # 4. Création
                     ConsommationEncre.objects.create(
                         job_name=str(job_val),
                         date=d_prod,
                         process_type=final_type,
                         support=row.get('Support', 'Inconnu'),
                         laize=float(row.get('Laize', 0)),
-                        
-                        # Récupération sécurisée des poids pour le calcul du grammage
                         bobine_in=float(row.get('Bobine_In', 0)),
                         bobine_out=float(row.get('Bobine_Out', 0)),
                         metrage=float(row.get('Metrage', 0)),
-                        
                         encre_noir=float(row.get('Noir', 0)),
                         encre_magenta=float(row.get('Magenta', 0)),
                         encre_jaune=float(row.get('Jaune', 0)),
@@ -250,7 +239,6 @@ def import_stock_view(request):
                         encre_orange=float(row.get('Orange', 0)),
                         encre_blanc=float(row.get('Blanc', 0)),
                         encre_vernis=float(row.get('Vernis', 0)),
-                        
                         solvant_metoxyn=float(row.get('Metoxyn', 0)),
                         solvant_2080=float(row.get('2080', 0))
                     )
@@ -260,7 +248,6 @@ def import_stock_view(request):
             context = {'message': f'✅ Succès ! {count} lignes importées dans {import_type}.', 'success': True}
             
         except Exception as e:
-            # ERREUR (C'est ce bloc qui manquait !)
             context = {'message': f'❌ Erreur : {str(e)}', 'success': False}
             
     return render(request, 'stock/import_stock.html', context)
