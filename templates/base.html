@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Fb pack ERP Ultimate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { neon: '#f3b83a', darkbg: '#22375c', panel: '#1e293b' } } }
+        }
+    </script>
+    <style>
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-link:hover { color: #f3b83a; background: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body class="bg-darkbg text-gray-200 font-sans h-screen flex">
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-700 flex flex-col">
+        <div class="h-16 flex items-center justify-center border-b border-slate-700 p-2">
+    <img src="{% static 'logo.png' %}" alt="Logo" class="h-12 w-auto object-contain">
+</div>
+        <nav class="flex-1 py-4 space-y-1">
+            <a href="{% url 'dashboard' %}" class="nav-link flex items-center px-6 py-3 transition">📊 Dashboard</a>
+            <a href="{% url 'planning' %}" class="nav-link flex items-center px-6 py-3 transition">🏭 Production (Gantt)</a>
+            <a href="{% url 'reporting' %}" class="nav-link flex items-center px-6 py-3 transition">📈 Reporting</a>
+            
+            <div class="pt-4 pb-1 px-6 text-xs font-bold text-gray-500 uppercase">Modules Admin</div>
+            <a href="/admin/core/client/" class="nav-link flex items-center px-6 py-2 transition text-sm">🤝 CRM & Devis</a>
+            <a href="/admin/core/technicalproduct/" class="nav-link flex items-center px-6 py-2 transition text-sm">🎨 Prépresse & Outils</a>
+            <a href="/admin/core/productionorder/" class="nav-link flex items-center px-6 py-2 transition text-sm">📝 Ordres Fabrication</a>
+            <a href="/admin/core/material/" class="nav-link flex items-center px-6 py-2 transition text-sm">📦 Stocks & Achats</a>
+            <a href="{% url 'import_stock' %}" class="nav-link flex items-center px-6 py-2 transition text-sm text-green-400 hover:text-green-300">📥 Importer Excel</a>
+            <a href="/admin/core/machine/" class="nav-link flex items-center px-6 py-2 transition text-sm">⚙️ Parc Machine</a>
+        </nav>
+                <!-- ZONE UTILISATEUR (A coller juste avant </aside>) -->
+        <div class="mt-auto border-t border-slate-700 p-4 bg-slate-900/80 backdrop-blur-sm">
+            
+            <!-- Info Profil -->
+            <div class="flex items-center gap-3 mb-4">
+                <!-- Avatar avec Initiale -->
+                <div class="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-black font-bold shadow-lg shadow-cyan-500/20">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <!-- Nom et Statut -->
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-white truncate w-32">{{ user.username|default:"Utilisateur" }}</p>
+                    <p class="text-[10px] text-green-400 flex items-center gap-1">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        En ligne
+                    </p>
+                </div>
+            </div>
+
+            <!-- Boutons Actions -->
+            <div class="grid grid-cols-2 gap-2">
+                <!-- Bouton Admin -->
+                <a href="/admin/" class="flex items-center justify-center gap-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-gray-300 py-2 rounded-lg border border-slate-600 transition duration-200">
+                    ⚙️ Admin
+                </a>
+
+                <!-- Bouton Déconnexion (DOIT ETRE UN FORMULAIRE) -->
+                <form action="{% url 'logout' %}" method="post" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center justify-center gap-1 text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 py-2 rounded-lg transition duration-200">
+                        🚪 Sortir
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- FIN ZONE UTILISATEUR -->
+
+    </aside> <!-- C'est ici que la sidebar se ferme -->
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 overflow-auto p-8 relative">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
